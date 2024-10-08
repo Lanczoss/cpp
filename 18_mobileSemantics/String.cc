@@ -38,7 +38,10 @@ class String {
 
   String &operator=(String &&rhs) {
     if (this != &rhs) {
-      delete[] _pstr;
+      // 删除原本指向的空间
+      if (_pstr) {
+        delete[] _pstr;
+      }
       // 浅拷贝
       _pstr = rhs._pstr;
       rhs._pstr = nullptr;
