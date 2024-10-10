@@ -29,5 +29,6 @@ int main() {
   for (auto &unp : vec) {
     unp->print();
   }
+  vec.push_back(unique_ptr<Point>(new Point(1, 2)));
   return 0;
 }
