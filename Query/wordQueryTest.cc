@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 
     // 调用Query接口去查询单词
     Query name(seek);
-    const QueryResult results = name.eval(tq);
+    const QueryResult results = (~name).eval(tq);
     print(std::cout, results) << endl;
 
   } while (true);

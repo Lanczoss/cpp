@@ -34,6 +34,7 @@ class Query {
   friend Query operator|(const Query &, const Query &);
   // 重载&
   friend Query operator&(const Query &, const Query &);
+  friend Query operator~(const Query &);
 
  public:
   // 根据输入的单词创建一个对象
@@ -52,6 +53,22 @@ class Query {
   // 类似基类指针的效果（可以进行动态多态）
   shared_ptr<Query_base> _query;
 };
+
+class NotQuery : public Query_base {
+  friend Query operator~(const Query &);
+
+  NotQuery(const Query &q) : _query(q) {}
+
+  QueryResult eval(const TextQuery &) const;
+
+  string rep() const { return "~(" + _query.rep() + ")"; }
+
+  Query _query;
+};
+
+inline Query operator~(const Query &q) {
+  return shared_ptr<Query_base>(new NotQuery(q));
+}
 
 // 用于是一个抽象类
 // 存储两个操作数的情况
