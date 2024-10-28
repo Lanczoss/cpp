@@ -9,7 +9,7 @@ void TcpConnection::send(const string &msg) {
 }
 
 string TcpConnection::receive() {
-  char buf[65535];
+  char buf[65535] = {0};
   _sockIO.readLine(buf, sizeof(buf));
   return buf;
 }
