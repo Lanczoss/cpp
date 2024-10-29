@@ -214,9 +214,12 @@ void EventLoop::handleFunctors() {
   {
     lock_guard<mutex> lg(_mutex);
     temp.swap(_pendings);
+    _pendings.clear();
   }
   for (auto &f : temp) {
     // this->send(msg)
-    f();
+    if (f) {
+      f();
+    }
   }
 }

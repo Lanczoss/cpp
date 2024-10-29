@@ -38,16 +38,15 @@ void onClose(const TcpConnectionPtr &con) {
 }
 
 int main(int argc, char **argv) {
-  TcpServer tcp(argv[1], argv[2]);
-
   ThreadPool pool(4, 10);
+  pool.start();
   gPool = &pool;
 
+  TcpServer tcp(argv[1], argv[2]);
   tcp.setAllCallback(std::move(onNewConnection), std::move(onMessage),
                      std::move(onClose));
 
   tcp.start();
 
-  tcp.stop();
   return 0;
 }

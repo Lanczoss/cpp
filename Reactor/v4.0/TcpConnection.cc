@@ -2,6 +2,10 @@
 
 #include <stdio.h>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 #include "EventLoop.h"
 
 TcpConnection::TcpConnection(int fd, EventLoop *loop)
@@ -90,6 +94,6 @@ void TcpConnection::sendToLoop(const string &msg) {
   // send TcpConnection, msg and send function
   if (_loop) {
     // void runInLoop(function<void()> &&)
-    _loop->runInLoop([this, msg]() { this->send(msg); });
+    _loop->runInLoop([this, msg]() { send(msg); });
   }
 }
