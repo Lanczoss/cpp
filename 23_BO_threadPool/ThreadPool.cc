@@ -1,66 +1,61 @@
 #include "ThreadPool.h"
 
 #include <iostream>
-
 using std::cout;
 using std::endl;
 
-ThreadPool::ThreadPool(size_t threadNum, size_t queSize)
+ThreadPool::ThreadPool(size_t threadNum, size_t queueSize)
     : _threadNum(threadNum),
-      _queSize(queSize),
-      _taskQue(_queSize),
+      _taskQueue(queueSize),
+      _queueSize(queueSize),
       _isExit(false) {}
 
 ThreadPool::~ThreadPool() {}
 
-// 线程池的启动与停止（创建线程与回收线程）
 void ThreadPool::start() {
-  // 创建线程对象,并且存放在容器中
-  for (size_t idx = 0; idx != _threadNum; ++idx) {
-    _threads.push_back(thread(&ThreadPool::doTask, this));
+  // initialize _threads
+  for (size_t idx = 0; idx < _threadNum; ++idx) {
+    _threads.push_back(std::thread(&ThreadPool::doTask, this));
   }
 }
 
 void ThreadPool::stop() {
-  // 保证任务执行完，也就是任务队列为空
-  while (!_taskQue.empty()) {
-    using namespace std::chrono;
-    // 为了让出cpu的控制权，也就是防止cpu空转，那么主线程睡眠
-    std::this_thread::sleep_for(seconds(1));
+  // if want to process all the tasks in queue
+  while (!_taskQueue.empty()) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
-  // 线程池要退出了，标志位需要修改
+
   _isExit = true;
 
-  // 唤醒所有等待在非空条件变量上的线程（唤醒所有工作线程）
-  /* _notEmpty.notify_all(); */
-  _taskQue.wakeup();
+  // wake up all
+  _taskQueue.wakeup();
 
-  // 回收所有的子线程
   for (auto &th : _threads) {
     th.join();
   }
 }
 
-// 添加任务与获取任务
-void ThreadPool::addTask(Task &&task) {
-  if (task) {
-    _taskQue.push(std::move(task));
+void ThreadPool::addTask(ElemType &&newTask) {
+  if (newTask) {
+    _taskQueue.push(std::move(newTask));
   }
 }
 
-Task ThreadPool::getTask() { return _taskQue.pop(); }
+ThreadPool::ElemType ThreadPool::getTask() { return _taskQueue.pop(); }
 
-// 线程池交给工作线程执行的任务（线程入口函数）
+// thread entry function
 void ThreadPool::doTask() {
+  // when thread can leave?
   while (!_isExit) {
-    // 获取任务
-    Task taskcb = getTask();
-    if (taskcb) {
-      // 执行任务
-      /* ptask->process();//多态 */
-      taskcb();  // 执行回调
+    // pop will wait for newTask
+    ElemType newTask = getTask();
+    if (newTask) {
+      // newTask->process();
+      // execute callback function
+      newTask();
     } else {
-      cout << "nullptr == ptask" << endl;
+      // cout << "thread got a void task." << endl;
+      cout << "newTask == nullptr" << endl;
     }
   }
 }

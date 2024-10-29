@@ -1,69 +1,46 @@
 #include "TaskQueue.h"
 
-TaskQueue::TaskQueue(int capa)
-: _capacity(capa)
-, _que()
-, _mutex()
-, _notFull()
-, _notEmpty()
-, _flag(true)
-{
+TaskQueue::TaskQueue(int capacity)
+    : _queue(),
+      _mutex(),
+      _notEmpty(),
+      _notFull(),
+      _capacity(capacity),
+      _flag(true) {}
 
+TaskQueue::~TaskQueue() {}
+
+void TaskQueue::push(ElemType &&value) {
+  // get lock
+  unique_lock<std::mutex> m(_mutex);
+  while (full()) {
+    _notFull.wait(m);
+  }
+  _queue.push(std::move(value));
+  // notify who waits for queue
+  _notEmpty.notify_one();
 }
 
-TaskQueue::~TaskQueue()
-{
-
+TaskQueue::ElemType TaskQueue::pop() {
+  unique_lock<std::mutex> m(_mutex);
+  while (empty() && _flag) {
+    _notEmpty.wait(m);
+  }
+  if (_flag) {
+    ElemType temp = _queue.front();
+    _queue.pop();
+    _notFull.notify_one();
+    return temp;
+  } else {
+    return nullptr;
+  }
 }
 
-//生产数据与消费数据
-void TaskQueue::push(ElemType &&task)
-{
-    unique_lock<mutex> ul(_mutex);
-    while(full())
-    {
-        _notFull.wait(ul);
-    }
-    _que.push(std::move(task));
-    _notEmpty.notify_one();
-}
+bool TaskQueue::empty() { return 0 == _queue.size(); }
 
-ElemType TaskQueue::pop()
-{
-    unique_lock<mutex> ul(_mutex);
+bool TaskQueue::full() { return _capacity == _queue.size(); }
 
-    while(empty() && _flag)
-    {
-        _notEmpty.wait(ul);//睡眠
-    }
-
-    if(_flag)
-    {
-        ElemType tmp = _que.front();
-        _que.pop();
-        _notFull.notify_one();
-
-        return tmp;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-//判空与判满
-bool TaskQueue::empty() const
-{
-    return 0 == _que.size(); 
-}
-
-bool TaskQueue::full() const
-{
-    return _capacity == _que.size();
-}
-
-void TaskQueue::wakeup()
-{
-    _flag = false;
-    _notEmpty.notify_all();
+void TaskQueue::wakeup() {
+  _flag = false;
+  _notEmpty.notify_all();
 }
