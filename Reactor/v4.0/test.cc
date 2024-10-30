@@ -38,7 +38,7 @@ void onClose(const TcpConnectionPtr &con) {
 }
 
 int main(int argc, char **argv) {
-  ThreadPool pool(4, 10);
+  ThreadPool pool(5, 10);
   pool.start();
   gPool = &pool;
 
