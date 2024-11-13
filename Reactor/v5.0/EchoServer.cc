@@ -41,10 +41,12 @@ void EchoServer::onMessage(const TcpConnectionPtr &con) {
   // 接收到客户端的数据之后，可以将数据做业务逻辑的处理
   // add the task(msg) to threadPool
 
-  MyTask mt(msg, con);
+  /// auto mt = std::make_shared<MyTask>(msg, con);
 
-  _pool.addTask([&mt]() { mt.process(); });
-
+  _pool.addTask([msg, con]() {
+    MyTask mt(msg, con);
+    mt.process();
+  });
   // Task can send now
   // con->send(msg);
 }
